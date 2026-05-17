@@ -1,14 +1,18 @@
-from collections.abc import Set
+from collections.abc import Callable, Iterable, Set
 
 
-def backward(moves: Set[int], n: int) -> list[int]:
-    dp = [-1] * n
-    sorted_moves = sorted(moves, reverse=True)
+def mex(vals: Set[int]) -> int:
+    res = 0
+    while res in vals:
+        res += 1
+    return res
+
+
+def backward(options_func: Callable[[int], Iterable[int]], n: int) -> list[int]:
+    dp = [0] * n
     for i in range(1, n):
-        for s in sorted_moves:
-            if s <= i and dp[i - s] == -1:
-                dp[i] = s
-                break
+        options_vals = {dp[next_state] for next_state in options_func(i)}
+        dp[i] = mex(options_vals)
     return dp
 
 
@@ -21,7 +25,10 @@ if __name__ == '__main__':
         sys.exit(1)
     n = int(sys.argv[1])
     s_set = {int(x) for x in sys.argv[2].split(',')}
-    result = backward(s_set, n)
+
+    def subtraction_game(state: int) -> list[int]:
+        return [state - s for s in s_set if s <= state]
+
+    result = backward(subtraction_game, n)
     for i, val in enumerate(result):
-        status = 'W' if val != -1 else 'L'
-        print(f'dp[{i}] = {val} ({status})')
+        print(f'g({i}) = {val}')
